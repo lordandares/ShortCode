@@ -23,8 +23,9 @@ export class UserService {
     return this.userRepository.findOneBy({ id });
   }
 
-  updateUser(id: number, user: Partial<User>): Promise<void> {
-    return this.userRepository.update(id, user).then(() => undefined);
+  async updateUser(id: number, user: Partial<User>): Promise<User> {
+    await this.userRepository.update(id, user);
+    return this.userRepository.findOneBy({ id });
   }
 
   deleteUser(id: number): Promise<void> {
