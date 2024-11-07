@@ -31,6 +31,34 @@ async function seed() {
       frequency: Math.floor(Math.random() * 100),
       shortCode: await generateRandomShortCode(),
     },
+    {
+      originalUrl: 'https://example3.com',
+      reducedUrl: 'http://short.ly/example1',
+      title: 'Example Website 3',
+      frequency: Math.floor(Math.random() * 100),
+      shortCode: await generateRandomShortCode(),
+    },
+    {
+      originalUrl: 'https://example4.com',
+      reducedUrl: 'http://short.ly/example2',
+      title: 'Example Website 4',
+      frequency: Math.floor(Math.random() * 100),
+      shortCode: await generateRandomShortCode(),
+    },
+    {
+      originalUrl: 'https://example3.com',
+      reducedUrl: 'http://short.ly/example1',
+      title: 'Example Website 5',
+      frequency: Math.floor(Math.random() * 100),
+      shortCode: await generateRandomShortCode(),
+    },
+    {
+      originalUrl: 'https://example4.com',
+      reducedUrl: 'http://short.ly/example2',
+      title: 'Example Website 6',
+      frequency: Math.floor(Math.random() * 100),
+      shortCode: await generateRandomShortCode(),
+    },
   ];
 
   for (const linkData of links) {
