@@ -1,6 +1,6 @@
 # Short Link #
 
-This project is made with NestJs, TypeOrm, Mysql Database, Grapql
+This project is made with NestJs, TypeOrm, Mysql Database, Grapql, unit test are added and also e2e tests
 
 ## Project setup
 
@@ -14,7 +14,7 @@ Copy the file .env.example to create .env in the root
 
 ## Docker
 
-make sure to install Docker [text](https://docs.docker.com/desktop/install/mac-install/)
+make sure to install Docker [Intall Link](https://docs.docker.com/desktop/install/mac-install/)
 
 ## Start Database 
 
