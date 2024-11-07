@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserService } from './services/user/user.service';
-import { UserResolver } from './resolver/user/user.resolver';
-import { User } from '../model/entities/user/user';
+import { LinkService } from './services/link/link.sercice';
+import { LinkResolver } from './resolver/link/link.resolver';
+import { Link } from './entities/link/link';
+import { ShortLinkService } from './services/link/helpers/shortLinkService';
+import { UrlCrawlerService } from './services/link/helpers/urlCrawler';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
-  providers: [UserService, UserResolver],
-  exports: [UserService],
+  imports: [TypeOrmModule.forFeature([Link])],
+  providers: [LinkService, LinkResolver, ShortLinkService, UrlCrawlerService],
+  exports: [LinkService],
 })
 export class ModelModule {}

@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Link } from '../model/entities/link/link';
+import { LinkService } from '../model/services/link/link.sercice';
+import { UrlCrawlerService } from '../model/services/link/helpers/urlCrawler'; // or wherever this service is located
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { ModelModule } from './model/model.module';
-import { Link } from './model/entities/link/link';
+import { ShortLinkService } from '../model/services/link/helpers/shortLinkService';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true, // Loads .env file globally
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get<string>('DB_HOST'),
@@ -20,15 +21,12 @@ import { Link } from './model/entities/link/link';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         entities: [Link],
-        synchronize: true,
+        synchronize: true, // Only for development
       }),
+      inject: [ConfigService],
     }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,
-      autoSchemaFile: 'schema.gql', // Automatically generate schema
-      playground: true, // Enable GraphQL Playground for testing queries
-    }),
-    ModelModule,
+    TypeOrmModule.forFeature([Link]),
   ],
+  providers: [LinkService, UrlCrawlerService, ShortLinkService],
 })
-export class AppModule {}
+export class SeedModule {}

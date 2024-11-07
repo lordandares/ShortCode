@@ -1,19 +1,19 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 
 @ObjectType()
-export class UserType {
+export class LinkType {
   @Field(() => Int)
   id: number;
 
   @Field()
-  firstName: string;
+  originalUrl: string;
 
   @Field()
-  lastName: string;
-
-  @Field(() => Int)
-  age: number;
+  reducedUrl: string;
 
   @Field()
-  address: string;
+  title: string;
+
+  @Field()
+  frequency: number;
 }

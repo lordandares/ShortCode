@@ -2,9 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { UrlCrawlerService } from './../src/model/services/link/helpers/urlCrawler';
 
-describe('UserResolver (e2e)', () => {
+describe('LinkResolver e2e', () => {
   let app: INestApplication;
+  let urlCrawlerService: UrlCrawlerService;
+  const originalUrl = `https://test.com/${Math.floor(Math.random() * 10000000) + 1}`;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -13,148 +16,110 @@ describe('UserResolver (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    // Get the actual UrlCrawlerService instance and mock `getTitle`
+    urlCrawlerService = moduleFixture.get<UrlCrawlerService>(UrlCrawlerService);
+    jest
+      .spyOn(urlCrawlerService, 'getTitle')
+      .mockResolvedValue('Mocked Page Title');
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('should create a user', () => {
-    const createUserMutation = `
+  it('should create a shortened URL', async () => {
+    const reducedUrlMutation = `
       mutation {
-        createUser(createUserInput: {
-          firstName: "John",
-          lastName: "Doe",
-          age: 30,
-          address: "123 Main St"
-        }) {
+        reducedUrl(originalUrl: "${originalUrl}") {
           id
-          firstName
-          lastName
-          age
-          address
+          originalUrl
+          reducedUrl
+          frequency
+          title
         }
       }
     `;
 
-    return request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post('/graphql')
-      .send({
-        query: createUserMutation,
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.createUser).toEqual({
-          id: expect.any(Number),
-          firstName: 'John',
-          lastName: 'Doe',
-          age: 30,
-          address: '123 Main St',
-        });
-      });
+      .send({ query: reducedUrlMutation })
+      .expect(200);
+
+    const link = response.body.data.reducedUrl;
+    expect(link).toHaveProperty('id');
+    expect(link.originalUrl).toBe(originalUrl);
+    expect(link).toHaveProperty('reducedUrl');
+    expect(link.frequency).toBe(0);
   });
 
-  it('should fetch all users', () => {
-    const findAllUsersQuery = `
+  it('should retrieve the original URL from a shortened URL', async () => {
+    const reducedUrlMutation = `
+      mutation {
+        reducedUrl(originalUrl: "${originalUrl}") {
+          reducedUrl
+        }
+      }
+    `;
+
+    // Create a shortened URL
+    const createResponse = await request(app.getHttpServer())
+      .post('/graphql')
+      .send({ query: reducedUrlMutation })
+      .expect(200);
+
+    const reducedUrl = createResponse.body.data.reducedUrl.reducedUrl;
+
+    const getOriginalUrlQuery = `
       query {
-        findAllUsers {
+        getOriginalUrl(url: "${reducedUrl}") {
           id
-          firstName
-          lastName
-          age
-          address
+          originalUrl
+          reducedUrl
+          frequency
+          title
         }
       }
     `;
 
-    return request(app.getHttpServer())
+    // Retrieve the original URL
+    const getResponse = await request(app.getHttpServer())
       .post('/graphql')
-      .send({
-        query: findAllUsersQuery,
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.findAllUsers).toBeInstanceOf(Array);
-      });
+      .send({ query: getOriginalUrlQuery })
+      .expect(200);
+
+    const link = getResponse.body.data.getOriginalUrl;
+    expect(link.originalUrl).toBe(originalUrl);
+    expect(link.reducedUrl).toBe(reducedUrl);
   });
 
-  it('should fetch a user by id', () => {
-    const findUserByIdQuery = `
+  it('should retrieve the top 100 most frequently accessed links', async () => {
+    const topOneHundredQuery = `
       query {
-        findUserById(id: 2) {
+        topOneHundred {
           id
-          firstName
-          lastName
-          age
-          address
+          originalUrl
+          reducedUrl
+          frequency
+          title
         }
       }
     `;
 
-    return request(app.getHttpServer())
+    const response = await request(app.getHttpServer())
       .post('/graphql')
-      .send({
-        query: findUserByIdQuery,
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.findUserById).toEqual({
-          id: 2,
-          firstName: expect.any(String),
-          lastName: expect.any(String),
-          age: expect.any(Number),
-          address: expect.any(String),
-        });
-      });
-  });
+      .send({ query: topOneHundredQuery })
+      .expect(200);
 
-  it('should update a user', () => {
-    const updateUserMutation = `
-      mutation {
-        updateUser(id: 3, updateUserInput: {
-          firstName: "Jane"
-        }) {
-          id
-          firstName
-          lastName
-          age
-          address
-        }
-      }
-    `;
-
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        query: updateUserMutation,
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.updateUser).toEqual({
-          id: 3,
-          firstName: 'Jane',
-          lastName: expect.any(String),
-          age: expect.any(Number),
-          address: expect.any(String),
-        });
-      });
-  });
-
-  it.skip('should delete a user', () => {
-    const deleteUserMutation = `
-      mutation {
-        deleteUser(id: 1)
-      }
-    `;
-
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .send({
-        query: deleteUserMutation,
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.data.deleteUser).toBe(true);
-      });
+    const links = response.body.data.topOneHundred;
+    expect(links).toBeInstanceOf(Array);
+    expect(links.length).toBeLessThanOrEqual(100);
+    links.forEach((link) => {
+      expect(link).toHaveProperty('id');
+      expect(link).toHaveProperty('originalUrl');
+      expect(link).toHaveProperty('reducedUrl');
+      expect(link).toHaveProperty('frequency');
+      expect(link).toHaveProperty('title');
+    });
   });
 });

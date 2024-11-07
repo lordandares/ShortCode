@@ -2,35 +2,19 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type UserType {
+type LinkType {
   id: Int!
-  firstName: String!
-  lastName: String!
-  age: Int!
-  address: String!
+  originalUrl: String!
+  reducedUrl: String!
+  title: String!
+  frequency: Float!
 }
 
 type Query {
-  findAllUsers: [UserType!]!
-  findUserById(id: Int!): UserType
+  getOriginalUrl(url: String!): LinkType
+  topOneHundred: [LinkType!]!
 }
 
 type Mutation {
-  createUser(createUserInput: CreateUserInput!): UserType!
-  updateUser(id: Int!, updateUserInput: UpdateUserInput!): UserType
-  deleteUser(id: Int!): Boolean!
-}
-
-input CreateUserInput {
-  firstName: String!
-  lastName: String!
-  age: Int!
-  address: String!
-}
-
-input UpdateUserInput {
-  firstName: String
-  lastName: String
-  age: Int
-  address: String
+  reducedUrl(originalUrl: String!): LinkType!
 }
